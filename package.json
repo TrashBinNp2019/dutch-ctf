@@ -1,0 +1,16 @@
+{
+  "name": "dutch-ctf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tests/index.js",
+  "scripts": {
+    "start": "node src/mainframe/index.js",
+    "test": "node tests/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "net": "^1.0.2"
+  }
+}
