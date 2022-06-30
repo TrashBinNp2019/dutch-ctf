@@ -42,6 +42,7 @@ function init(port:number, msg:string):Module {
     let msgArr = shred(msg);
 
     const server = new net.createServer();
+    let last_req:number = undefined;
 
     server.on('connection', (socket) => {
         socket.write(`WITCHING_HOUR v ${version}\n`);
@@ -56,23 +57,33 @@ function init(port:number, msg:string):Module {
             let str:string = words[0].toLowerCase();
 
             let numbers = data.toString('ascii').match(/\d+/);
-            let number = -1;
+            let number = undefined;
             if (numbers) {
                 number = Number(numbers[0]);
             } 
 
             switch (str) {
                 case "help":
-                    socket.write("HELP, GET $key, EXIT\n");
+                    socket.write("You may enter, once you have the key.\n");
+                    socket.write("HELP, GET $key, STATUS, EXIT\n");
                     break;
                 case "get":
-                    let bits = msgArr.filter((val) => {return val.key === number});
+                    let bits:MsgBit[] = [];
+                    if (number !== undefined) {
+                        msgArr.filter((val) => {return val.key === number});
+                        last_req = number;
+                    }
+                    
                     if (bits.length != 1) {
                         socket.write('Invalid key\n');
                     } else {
                         socket.write(JSON.stringify({msg: bits[0].msg, next_key: bits[0].next}) + '\n');
                     }
                     break;
+                case "status":
+                    let res = {total: msgArr.length, last_requested: last_req };
+                    socket.write(JSON.stringify(res)+'\n');
+                    break;  
                 case "exit":
                     socket.end();
             }

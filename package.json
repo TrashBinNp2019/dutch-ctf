@@ -4,7 +4,7 @@
   "description": "",
   "main": "tests/index.js",
   "scripts": {
-    "start": "node src/mainframe/index.js",
+    "start": "ts-node-esm src/mainframe/index.ts",
     "test": "node tests/index.js"
   },
   "author": "",
