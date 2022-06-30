@@ -1,15 +1,22 @@
 import * as net from 'net';
 import { Module } from './base-module.js';
 
+/**
+ * Broadcasting module, sending defined message to all subscribers
+ */
+
 const version = "1.0.0"
 const PORTRE = /^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/gi;
 
-class Client {
+/**
+ * Describes a client, who receives data from the module. 
+ * Containes the message to be sent, the address and port of the client as well as the socket, used for communication.
+*/
+class Subscriber {
     address:string;
     port:number;
     socket:net.Socket;
     val:number;
-    up:boolean;
 
     constructor(address:string, port:number, val:number) {
         if (!net.isIPv4(address)) throw new Error("Invalid IP address");
@@ -18,7 +25,6 @@ class Client {
         this.address = address;
         this.port = port;
         this.val = val;
-        this.up = false;
     }
 
     connect():boolean {
@@ -26,12 +32,10 @@ class Client {
         this.socket.connect(this.port, this.address);
         this.socket.on("error", (err:Error) => {
             console.log("err");
-            this.up = false;
             return false
         });
         this.socket.on("connect", () => {
             console.log("connected");
-            this.up = true;
             setInterval(() => {
                 this.socket.write(String(Math.random() < 0.95 ? Math.floor( Math.random() * this.val*2): this.val) + "\n");
             }, 100);
@@ -41,11 +45,11 @@ class Client {
 }
 
 function init(port:number, msg:number):Module {
-    let clients = [];
+    let subscribers = [];
     const server = new net.createServer();
 
     server.on('connection', (socket) => {
-        socket.write(`EDGE v ${version}\n`);
+        socket.write(`EAGLE v${version}\n`);
 
         socket.on("error", (err:Error) => {
             console.log("err");
@@ -70,19 +74,24 @@ function init(port:number, msg:number):Module {
                 case "add":
                     if (!number) {
                         socket.write("Invalid port\n");
-                        break;
+                        return;
                     }
-                    clients.push(new Client(socket.remoteAddress, number, msg));
-                    if (!clients[clients.length - 1].connect()) {
-                        clients.pop();
+                    try {
+                    subscribers.push(new Subscriber(socket.remoteAddress, number, msg));
+                    } catch (err) {
+                        socket.write("Error: %d\n", err);
+                        return;
+                    }
+                    if (!subscribers[subscribers.length - 1].connect()) {
+                        subscribers.pop();
                         socket.write("Failed to connect\n");
-                        break;
+                        return;
                     }
                     socket.write("Success\n");
                     break;
                 case "list":
-                    clients.filter(element => { return element.up; });
-                    let list = clients.map((val) => {
+                    // TODO check for actually alive connections
+                    let list = subscribers.map((val) => {
                         return `${val.address}:${val.port}`;
                     }).join("\n");
                     socket.write(`${list}\n`);
