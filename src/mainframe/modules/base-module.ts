@@ -5,6 +5,7 @@ export class Module {
     trash: () => void;
     entry_point: number;
     port: number;
+    server: any;
 
     constructor(port: number) {
         this.port = port;

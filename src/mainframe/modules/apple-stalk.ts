@@ -1,5 +1,6 @@
 import * as net from 'net';
 import { Module } from './base-module.js';
+import * as db from '../system/clients.js';
 
 /**
  * Imitation of a FTP server
@@ -7,43 +8,17 @@ import { Module } from './base-module.js';
 
 const version = "1.0.0"
 
-// TODO make this actually useful
+function init(port:number):Module {
+    if (process.env.NODE_ENV === 'test') { db.addClient(); };
 
-/**
- * A client that can access a file system.
- */
-class Client {
-    auth:string;
-    files:{ name:string, content:string }[];
-
-    constructor(auth:string) {
-        this.auth = auth;
-        this.files = [];
-    }
-
-    addFile(name:string, content:string) {
-        this.files.push({ name, content });
-    }
-
-    getFile(name:string):string {
-        let match = this.files.filter(val => { return val.name === name });
-        if (match.length === 0) {
-            return "";
-        }
-        return match[0].content;
-    }
-}
-
-function init(port:number, msg:number):Module {
-    let clients = [new Client("admin")];
-    clients[0].addFile("index.html", "<h1>Hello World</h1>");
-    const server = new net.createServer();
+    db.clients[0].addFile("index.html", "<h1>Hello World</h1>");
+    const server = net.createServer();
 
     server.on('connection', (socket) => {
         socket.write(`APPLE STALK v${version}\n`);
         socket.write('AUTH:\n');
         let loggedIn = false;
-        let client:Client = undefined;
+        let client:db.Client = undefined;
 
         socket.on("error", (err:Error) => {
             console.log("err");
@@ -53,7 +28,7 @@ function init(port:number, msg:number):Module {
             if (!loggedIn) {
                 let auth = data.toString('ascii');
                 auth = auth.substring(0, auth.length - 1);
-                let match = clients.filter(val => { return val.auth === auth });
+                let match = db.clients.filter(val => { return val.apple_stalk_auth === auth });
                 if (match.length === 0) {
                     socket.write('INVALID_AUTH\n');
                     socket.write('AUTH:\n');
@@ -106,7 +81,7 @@ function init(port:number, msg:number):Module {
     server.listen(port, "127.0.0.1", () => {});
 
     let module = new Module(port);
-    module.trash = server.close;
+    module.trash = () => { server.close() };
     module.entry_point = -1;
 
     return module;

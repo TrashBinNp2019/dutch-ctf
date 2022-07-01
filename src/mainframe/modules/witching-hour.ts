@@ -23,12 +23,15 @@ class MsgBit {
     };
 }
 
-/*
+/**
  * Shreds a message into a chain:
  *
  * entry_point     key1        key2       key?       -1
  *     --->  bit1  --->  bit2  --->  ...  --->  end
-*/
+ * 
+ * @param msg {string} Message to shred
+ * @returns {MsgBit[]} Resulting array
+ */
 function shred(msg:string):MsgBit[] {
     let arr:MsgBit[] = [];
     let split = msg.match(/.{1,2}/g);
@@ -49,9 +52,9 @@ function shred(msg:string):MsgBit[] {
 }
 
 function init(port:number, msg:string):Module {
+    const server = net.createServer();
     let msgArr = shred(msg);
 
-    const server = new net.createServer();
     let last_req:number = undefined;
 
     server.on('connection', (socket) => {
@@ -104,7 +107,7 @@ function init(port:number, msg:string):Module {
     });
 
     let module = new Module(port);
-    module.trash = server.close;
+    module.trash = () => { server.close() };
     module.entry_point = msgArr[0].key;
 
     return module;

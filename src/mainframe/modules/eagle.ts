@@ -27,15 +27,17 @@ class Subscriber {
         this.val = val;
     }
 
+    /**
+     * Attempts to establish a connection to the client.
+     * @returns {boolean} True if connection was a success, false otherwise. 
+     */
     connect():boolean {
         this.socket = new net.Socket();
         this.socket.connect(this.port, this.address);
         this.socket.on("error", (err:Error) => {
-            console.log("err");
             return false
         });
         this.socket.on("connect", () => {
-            console.log("connected");
             setInterval(() => {
                 this.socket.write(String(Math.random() < 0.95 ? Math.floor( Math.random() * this.val*2): this.val) + "\n");
             }, 100);
@@ -46,7 +48,7 @@ class Subscriber {
 
 function init(port:number, msg:number):Module {
     let subscribers = [];
-    const server = new net.createServer();
+    const server = net.createServer();
 
     server.on('connection', (socket) => {
         socket.write(`EAGLE v${version}\n`);
@@ -105,7 +107,7 @@ function init(port:number, msg:number):Module {
     server.listen(port, "127.0.0.1", () => {});
 
     let module = new Module(port);
-    module.trash = server.close;
+    module.trash = () => { server.close() };
     module.entry_point = -1;
 
     return module;
