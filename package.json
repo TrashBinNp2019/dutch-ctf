@@ -5,7 +5,8 @@
   "main": "src/mainframe/index.ts",
   "scripts": {
     "start": "ts-node-esm src/mainframe/index.ts",
-    "test": "set NODE_ENV=test&& mocha --require ts-node/register tests/index.ts"
+    "test": "set NODE_ENV=test&& mocha --require ts-node/register tests/index.ts",
+    "example": "ts-node-esm examples/default.ts"
   },
   "author": "",
   "license": "ISC",

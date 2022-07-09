@@ -4,14 +4,12 @@ import * as db from '../system/clients.js';
 
 /**
  * Imitation of a FTP server
+ * Intentionally hackable via brute-force or any other method of obtaining valid auth tokens
  */
 
 const version = "1.0.0"
 
 function init(port:number):Module {
-    if (process.env.NODE_ENV === 'test') { db.addClient(); };
-
-    db.clients[0].addFile("index.html", "<h1>Hello World</h1>");
     const server = net.createServer();
 
     server.on('connection', (socket) => {
@@ -28,7 +26,7 @@ function init(port:number):Module {
             if (!loggedIn) {
                 let auth = data.toString('ascii');
                 auth = auth.substring(0, auth.length - 1);
-                let match = db.clients.filter(val => { return val.apple_stalk_auth === auth });
+                let match = db.clients.filter(val => { return val.global_auth === auth });
                 if (match.length === 0) {
                     socket.write('INVALID_AUTH\n');
                     socket.write('AUTH:\n');

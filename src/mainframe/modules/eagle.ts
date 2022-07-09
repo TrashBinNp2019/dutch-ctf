@@ -2,10 +2,10 @@ import * as net from 'net';
 import { Module } from './base-module.js';
 
 /**
- * Broadcasting module, sending defined message to all subscribers
+ * Broadcasting module, which sends a predefined message to all subscribers
  */
 
-const version = "1.0.0"
+const version = "1.0.1"
 const PORTRE = /^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/gi;
 
 /**
@@ -38,9 +38,11 @@ class Subscriber {
             return false
         });
         this.socket.on("connect", () => {
+            setTimeout(() => {
             setInterval(() => {
                 this.socket.write(String(Math.random() < 0.95 ? Math.floor( Math.random() * this.val*2): this.val) + "\n");
             }, 100);
+            }, 0.5 * 60 * 1000);
         });
         return true;
     }

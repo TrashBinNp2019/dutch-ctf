@@ -1,0 +1,14 @@
+body {
+  background-color: rgb(240, 240, 240);
+  padding-top: 0px;
+  padding-left: 15px;
+}
+
+#status-external {
+    background-color: rgb(255, 255, 255);
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgb(0, 0, 0);
+    padding: 20px;
+    width: fit-content;
+}

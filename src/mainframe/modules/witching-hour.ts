@@ -1,7 +1,11 @@
 import * as net from 'net';
 import { Module } from './base-module.js';
 
-const version = "1.0.0"
+/**
+ * Simple module, acting as a map-style database, where every message is stored in a chain.
+ */
+
+const version = "1.0.0";
 var keyGenerator = () => { return Math.floor(Math.random() * 1048576) };
 
 /**

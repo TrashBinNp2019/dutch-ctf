@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Wren</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+    <script>
+        let state = {
+            drawn: false,
+            up: false,
+            port: null,
+            visits: null,
+        };
+
+        function appendLogin() {
+            $("#main").append("" +
+                "<form action=\"/\" method=\"get\">" +
+                    "<input type=\"text\" name=\"auth\" placeholder=\"123abc\" />" +
+                    "<input type=\"submit\" value=\"Submit\" />" +
+                "</form>"
+            );
+        };
+
+        function refresh(auth) {
+            $.ajax({
+                url: `/api/auth/${auth}/service`,
+                type: "GET",
+                data: {auth: auth},
+                success: function(data) {
+                    let parsed_data = JSON.parse(data);
+
+                    if (parsed_data.up !== state.up ||
+                        parsed_data.port !== state.port  ||
+                        parsed_data.visits !== state.visits ||
+                        !state.drawn)
+                    {
+                        $("#status").empty();
+                        state.up = parsed_data.up;
+                        state.port = parsed_data.port;
+                        state.visits = parsed_data.visits;
+
+                        if (state.up) {
+                            appendStatus(auth, parsed_data);
+                        } else {
+                            appendLauncher(auth);
+                        }
+
+                        state.drawn = true;
+                    }
+                },
+                error: function(data) {
+                    alert("Error: " + JSON.parse(data).error);
+                }
+            });
+        };
+
+        function stop(auth) {
+            $.ajax({
+                url: '/api/auth/' + auth,
+                type: 'DELETE',
+                success: () => { 
+                    refresh(auth);
+                },
+                error: function(data) {
+                    alert("Error: " + JSON.parse(data).error);
+                },
+            });
+            $("status-button").text("Stopping...");
+        }
+
+        function start(auth) {
+            $.ajax({
+                url: '/api/auth/' + auth,
+                type: 'PUT',
+                success: () => {
+                    refresh(auth);
+                },
+                error: function(data) {
+                    alert("Error: " + JSON.parse(data).error);
+                },
+            });
+            $("status-button").text("Starting...");
+        }
+
+        function appendStatus(auth, data) {
+            $("#status-text").text("");
+            $("#status-text").append(`Running ✅<br>Port: ${data.port}<br>Visits: ${data.visits}`);
+            $("#status").append("" +
+                `<button id="status-button" onclick="stop('${auth}'.trim())">Stop</button>`
+            );
+        };
+
+        function appendLauncher(auth) {
+            $("#status-text").text("Not running ❌");
+            $("#status").append("" +
+                `<button id="status-button" onclick="start('${auth}'.trim())">Start</button>`
+            );
+        }
+
+        $(document).ready(function() {
+            $.get('api/version', (ver) => {
+                $('title').text('Wren v' + ver);
+                $('#title').text('Wren v' + ver);
+
+                let searchParams = new URLSearchParams(window.location.search);
+                if (searchParams.has('auth')) {
+                    $.get(`api/auth/${searchParams.get('auth')}/index`, (data, status) => {
+                        $('#text').text(`Welcome, ${searchParams.get('auth')}!`);
+                        if (JSON.parse(data).has) {
+                            $('#text').append(`<br>Index file found. 👍`);
+                            $('#status-external').prepend("" +
+                                "<h2>Service info:</h2>"
+                            );
+
+                            refresh(searchParams.get('auth'));
+                            setInterval(() => {
+                                refresh(searchParams.get('auth'))
+                            }, 1000);
+                        } else {
+                            $('#text').append(`<br>Index file not found on remote storage.`);
+                        }
+                    }).fail( () => {
+                        $('#text').text('Invalid authentification token.');
+                        appendLogin();
+                    } );
+                } else {
+                    appendLogin();
+                }
+                $.get('')
+
+            }).fail( () => { alert('Something went wrong...') } );
+        });
+    </script>
+    <h1 id="title">Wren v1.0.0</h1>
+
+    <div id="main">
+        <p id="text">Loading...</p>
+    </div>
+
+    <div id="status-external">
+        <p id="status-text">Loading...</p>
+        <div id="status"></div>
+    </div>
+</body>
+</html>

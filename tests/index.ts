@@ -75,7 +75,7 @@ suite('Apple Stalk', () => {
                 if (data.toString('ascii').includes("INVALID_AUTH")) {
                     assert.fail();
                 } else if (data.toString('ascii').includes("AUTH:")) {
-                    socket.write(db.clients[0].apple_stalk_auth + "\n");
+                    socket.write(db.clients[0].global_auth + "\n");
                 } else if (data.toString('ascii').includes("OK")) {
                     assert.isAbove(socket.bytesRead, 0);
                 } else {
@@ -102,7 +102,7 @@ suite('Apple Stalk', () => {
 
             socket.on("data", data => {
                 if (data.toString('ascii').includes("AUTH:")) {
-                    socket.write(randomAuth(3, db.clients[0].apple_stalk_auth) + "\n");
+                    socket.write(randomAuth(3, db.clients[0].global_auth) + "\n");
                 } else if (data.toString('ascii').includes("OK")) {
                     done();
                 }
