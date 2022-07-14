@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { Module } from './base-module.js';
+import { Module } from './general-module.js';
 
 /**
  * Simple module, acting as a map-style database, where every message is stored in a chain.
@@ -55,7 +55,7 @@ function shred(msg:string):MsgBit[] {
     return arr;
 }
 
-function init(port:number, msg:string):Module {
+function init(addr:string, port:number, msg:string):Module {
     const server = net.createServer();
     let msgArr = shred(msg);
 
@@ -107,7 +107,7 @@ function init(port:number, msg:string):Module {
         });
     });
 
-    server.listen(port, "127.0.0.1", () => {
+    server.listen(port, addr, () => {
     });
 
     let module = new Module(port);

@@ -1,5 +1,5 @@
 import * as net from 'net';
-import { Module } from './base-module.js';
+import { Module } from './general-module.js';
 
 /**
  * Broadcasting module, which sends a predefined message to all subscribers
@@ -48,7 +48,7 @@ class Subscriber {
     }
 }
 
-function init(port:number, msg:number):Module {
+function init(addr:string, port:number, msg:number):Module {
     let subscribers = [];
     const server = net.createServer();
 
@@ -106,7 +106,7 @@ function init(port:number, msg:number):Module {
         });
     });
 
-    server.listen(port, "127.0.0.1", () => {});
+    server.listen(port, addr, () => {});
 
     let module = new Module(port);
     module.trash = () => { server.close() };

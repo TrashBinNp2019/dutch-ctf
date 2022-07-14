@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';  
+import { File } from './files.js';
 
 // Length of apple-stalk auth tokens
 export const GLOBAL_AUTH_LENGTH = 6;
@@ -10,21 +10,27 @@ export class Client {
     // String, used for authentication in various modules. 
     // Should be unique for all clients
     global_auth:string;
-    // Files, accessible through apple-stalk modules
-    files:{ name:string, content:string }[];
+    // Files, accessible through apple-stalk module
+    files:File[];
 
     constructor() {
         this.global_auth = Math.random().toString(16).slice(2, GLOBAL_AUTH_LENGTH + 2);
         // this.global_auth = "4c82cb"; // FOR MANUAL TESTING ONLY, comment this when done!
         this.files = [];
-        this.addFile("flag.txt", Math.random().toString(16).slice(2, 16 + 2));
-        this.addFile("index.html", '<h1>Hello world :)</h1>');
+        this.addFileByContents("flag.txt", Math.random().toString(16).slice(2, 16 + 2));
 
         if (process.env.NODE_ENV !== 'test') { console.log(`Client ${this.global_auth} created.`) };
     }
 
-    addFile(name:string, content:string) {
-        this.files.push({ name, content });
+    addFileByContents(name:string, content:string) {
+        this.files.push(new File( name, content ));
+    }
+
+    addFile(file:File | undefined) {
+        if (file === undefined) {
+            throw new Error("File is undefined");
+        } 
+        this.files.push(file);
     }
 
     getFile(name:string):string {
@@ -38,13 +44,15 @@ export class Client {
 
 let clients:Client[] = [];
 
-export function addClient() {
-    clients.push(new Client());
+export function addClient(): string {
+    let client = new Client();
+    clients.push(client);
+    return client.global_auth;
 }
 
 if (process.env.NODE_ENV === 'test') { 
     addClient(); 
-    clients[0].addFile("index.html", "<h1>Hello World</h1>");
+    clients[0].addFileByContents("index.html", "<h1>Hello World</h1>");
 };
 
 export { clients };

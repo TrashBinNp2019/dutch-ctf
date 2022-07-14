@@ -9,10 +9,10 @@ import { init as eagle } from "../src/mainframe/modules/eagle.js";
 import { Client, clients } from "../src/mainframe/system/clients.js";
 
 export function init() {
-    // Needs more work (and modules idk)
     clients.push(new Client());
+    let addr = '127.0.0.1';
 
-    let module1 = witching_hour(3000, "success");
-    let module2 = eagle(3001, module1.entry_point);
-    let module3 = apple_stalk(3002);
+    let module1 = witching_hour(addr, 3000, "success");
+    let module2 = eagle(addr, 3001, module1.entry_point);
+    let module3 = apple_stalk(addr, 3002);
 }

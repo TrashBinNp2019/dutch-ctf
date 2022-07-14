@@ -1,4 +1,4 @@
-import { Module } from './base-module.js';
+import { Module } from './general-module.js';
 import * as db from '../system/clients.js';
 import * as http from 'http';
 import { promises as fs } from 'fs';
@@ -41,10 +41,8 @@ class Hosting {
     }
 }
 
-export function init(port:number):Module {
+export function init(addr:string, port:number):Module {
     let hostings:Hosting[] = [];
-    const host = '127.0.0.1';
-
     const server = http.createServer((req, res) => {
         let url = req.url.substring(0, (req.url + '?').indexOf('?'));;
         switch (url) {
@@ -125,7 +123,7 @@ export function init(port:number):Module {
                             }));
                             return;
                         }
-                        let hosting = new Hosting(file.content, auth, host);
+                        let hosting = new Hosting(file.content, auth, addr);
                         setTimeout(() => {
                             if (hosting.running) {
                                 hostings.push(hosting);
@@ -168,7 +166,7 @@ export function init(port:number):Module {
         res.end();
         return;
     });
-    server.listen(port, host);
+    server.listen(port, addr);
 
     return new Module(port);
 }

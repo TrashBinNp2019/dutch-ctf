@@ -1,8 +1,8 @@
 import { assert } from 'chai';
 import { Socket } from 'net';
-import { Module } from '../src/mainframe/modules/base-module.js';
+import { Module } from '../src/mainframe/modules/general-module.js';
 import { init as witching_hour } from '../src/mainframe/modules/witching-hour.js';
-import { init as apple_stalk } from "../src/mainframe/modules/apple-stalk.js";
+import { init as apple_stalk, connect } from "../src/mainframe/modules/apple-stalk.js";
 import * as db from '../src/mainframe/system/clients.js';
 
 /**
@@ -23,7 +23,7 @@ function randomAuth(difficulty:number, base:string) {
 // However, damn net.Server does NOT close when I ask it to.
 // bruh moment
 suite('Witching Hour', () => {
-    let module = witching_hour(3000, "this is a test");
+    let module = witching_hour('127.0.0.1', 3000, "this is a test");
     
     test('Module should be valid and accessible', function(){
         try{
@@ -44,7 +44,7 @@ suite('Witching Hour', () => {
 });
 
 suite('Apple Stalk', () => {
-    let module = apple_stalk(3001);
+    let module = apple_stalk('127.0.0.1', 3001);
     
     test('Module should be valid and accessible', function(){
         try{
@@ -85,6 +85,48 @@ suite('Apple Stalk', () => {
         } catch(e) {
             assert.fail();
         }
+    });
+    test('Connect instrument should work correctly', function(done){
+        // Unreachable destination
+        connect('127.0.0.1', 1, db.clients[0].global_auth)
+            .then(socket => {
+                assert.fail();
+            }).catch((err:string) => {
+                // as in 'destination inaccessible'
+                assert.isTrue(err.toLowerCase().includes("inaccessible"));
+            });
+
+        // Invalid service
+        connect('127.0.0.1', 3000, db.clients[0].global_auth)
+            .then(socket => {
+                assert.fail();
+            }).catch((err:string) => {
+                // as in 'invalid fromat'
+                assert.isTrue(err.toLowerCase().includes("format"));
+            });
+
+        // Invalid auth
+        connect('127.0.0.1', 3000, "INVALID")
+            .then(socket => {
+                assert.fail();
+            }).catch((err:string) => {
+                // as in 'invalid auth'
+                assert.isTrue(err.toLowerCase().includes("auth"));
+            });
+
+        // Correct arguments
+        connect('127.0.0.1', 3001, db.clients[0].global_auth)
+            .then(socket => {
+                // Testing that the socket is valid
+                socket.write("HELP\n");
+                socket.on("data", (data) => {
+                    assert.isAbove(socket.bytesRead, 0);
+                    assert.isTrue(data.toString('ascii').includes("HELP"));
+                    done();
+                });
+            }).catch(err => {
+                assert.fail(err);
+            });
     });
 
     // This test attempts brute-forcing the server for valid auth tokens.

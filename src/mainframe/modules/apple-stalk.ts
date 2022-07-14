@@ -1,15 +1,48 @@
 import * as net from 'net';
-import { Module } from './base-module.js';
+import { Module } from './general-module.js';
 import * as db from '../system/clients.js';
+import * as fs from '../system/files.js';
 
 /**
  * Imitation of a FTP server
  * Intentionally hackable via brute-force or any other method of obtaining valid auth tokens
  */
 
-const version = "1.0.0"
+const version = "1.1.0"
 
-function init(port:number):Module {
+/**
+ * Client-side asynchronous instrument for connecting.
+ * @param addr IP address of the server
+ * @param port Server port
+ * @param auth Auth token
+ * @returns Promise that resolves to a socket when the connection is established
+ */
+export function connect(addr:string, port:number, auth:string): Promise<net.Socket> {
+    return new Promise<net.Socket>((resolve, reject) => {
+        try {
+            let hub_socket = new net.Socket();
+            hub_socket.on("data", (data) => {
+                if (data.toString('ascii').includes("INVALID_AUTH")) {
+                    reject("Invalid auth");
+                } else if (data.toString('ascii').includes("AUTH:")) {
+                    hub_socket.write(auth + "\n");
+                } else if (data.toString('ascii').includes("OK")) {
+                    resolve(hub_socket);
+                } else {
+                    reject("Unknown format");
+                }
+            });
+            hub_socket.on('error', (err:Error) => {
+                reject(err.message);
+            });
+            hub_socket.connect(port, addr);
+        } catch(e) {
+            reject("Apple Stalk is inaccessible: " + e);
+        }
+    });
+}
+
+function init(addr:string, port:number):Module {
     const server = net.createServer();
 
     server.on('connection', (socket) => {
@@ -22,7 +55,7 @@ function init(port:number):Module {
             console.log("err");
         })
 
-        function handler(data) {
+        function handler(data: Buffer) {
             if (!loggedIn) {
                 let auth = data.toString('ascii');
                 auth = auth.substring(0, auth.length - 1);
@@ -46,14 +79,16 @@ function init(port:number):Module {
             let number = undefined;
             if (numbers) {
                 number = Number(numbers[0]);
-            } 
+            }
+
+            let args = data.toString('ascii').split(' ').map(val => { return val.replace('\n', '') });
 
             switch (str) {
                 case "help":
-                    socket.write("Browse your files.\n");
-                    socket.write("HELP, GET $name, LIST, EXIT\n");
+                    socket.write("Browse your files. Upload is forbidden. Clone hidden files from the server by their MD5 hash.\n");
+                    socket.write("HELP, CAT $name, CLONE $hash, LIST, EXIT\n");
                     break;
-                case "get":
+                case "cat":
                     if (words.length !== 2) {
                         socket.write("FILE_NOT_FOUND\n");
                         return;
@@ -65,6 +100,15 @@ function init(port:number):Module {
                     }
                     socket.write(matches[0].content + '\n');
                     break;
+                case "hash":
+                    try {
+                        let file = fs.getFileByHash(args[1]);
+                        client.addFile(file);
+                        socket.write(`CLONED ${file.name}\n`);
+                    } catch (err) {
+                        socket.write("FILE_NOT_FOUND\n");
+                    }
+                    return;
                 case "list":
                     socket.write(client.files.map(val => { return val.name }).join(', ') + '\n');
                     break;  
@@ -76,7 +120,7 @@ function init(port:number):Module {
         socket.on("data", handler);
     });
 
-    server.listen(port, "127.0.0.1", () => {});
+    server.listen(port, addr, () => {});
 
     let module = new Module(port);
     module.trash = () => { server.close() };
