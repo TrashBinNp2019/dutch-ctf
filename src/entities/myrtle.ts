@@ -38,7 +38,7 @@ export function spawn(hub:string, hub_port:number, port:number): Entity | undefi
             switch (arg.toLowerCase()) {
                 case 'clone': {
                     try {
-                        let socket = await connect(hub, hub_port, auth);
+                        let socket = await connect(hub, auth);
                         await new Promise<void>((resolve, reject) => {
                             socket.write('HASH ' + hash);
 

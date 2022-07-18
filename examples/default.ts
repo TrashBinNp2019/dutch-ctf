@@ -14,5 +14,5 @@ export function init() {
 
     let module1 = witching_hour(addr, 3000, "success");
     let module2 = eagle(addr, 3001, module1.entry_point);
-    let module3 = apple_stalk(addr, 3002);
+    let module3 = apple_stalk(addr);
 }
