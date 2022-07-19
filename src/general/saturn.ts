@@ -1,4 +1,5 @@
 import * as dgram  from 'dgram';
+// import * as dgram from '../general/virtual_sockets.js';
 import { Saturn, AppleStalk } from '../general/consts.js';
 
 
@@ -113,7 +114,14 @@ class Message{
     static fromString(data:string):Message {
         let obj = JSON.parse(data);
         let msg = new Message('', '');
-        // TODO replace props if present
+
+        if ('type' in obj) {
+            msg.type = obj.type;
+        }
+        if ('data' in obj) {
+            msg.data = obj.data;
+        }
+
         return msg;
     }
 }

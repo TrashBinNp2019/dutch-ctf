@@ -12,7 +12,6 @@ import * as fs from '../system/files.js';
 /**
  * Client-side asynchronous instrument for connecting.
  * @param addr IP address of the server
- * @param port Server port
  * @param auth Auth token
  * @returns Promise that resolves to a socket when the connection is established
  */

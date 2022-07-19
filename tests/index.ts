@@ -5,6 +5,8 @@ import { init as witching_hour } from '../src/mainframe/modules/witching-hour.js
 import { init as apple_stalk, connect } from "../src/mainframe/modules/apple-stalk.js";
 import * as db from '../src/mainframe/system/clients.js';
 
+import * as dgram from '../src/general/virtual_udp.js';
+
 /**
  * Function, that randomizes n characters in the base string. 
  * Used in apple-stalk test suite for brute-forcing authentication.
@@ -44,7 +46,7 @@ suite('Witching Hour', () => {
 });
 
 suite('Apple Stalk', () => {
-    let module = apple_stalk('127.0.0.1', 3001);
+    let module = apple_stalk('127.0.0.1');
     
     test('Module should be valid and accessible', function(){
         try{
@@ -88,25 +90,16 @@ suite('Apple Stalk', () => {
     });
     test('Connect instrument should work correctly', function(done){
         // Unreachable destination
-        connect('127.0.0.1', 1, db.clients[0].global_auth)
+        connect('1.1.1.1', db.clients[0].global_auth)
             .then(socket => {
                 assert.fail();
             }).catch((err:string) => {
                 // as in 'destination inaccessible'
                 assert.isTrue(err.toLowerCase().includes("inaccessible"));
             });
-
-        // Invalid service
-        connect('127.0.0.1', 3000, db.clients[0].global_auth)
-            .then(socket => {
-                assert.fail();
-            }).catch((err:string) => {
-                // as in 'invalid fromat'
-                assert.isTrue(err.toLowerCase().includes("format"));
-            });
-
+            
         // Invalid auth
-        connect('127.0.0.1', 3000, "INVALID")
+        connect('127.0.0.1', "INVALID")
             .then(socket => {
                 assert.fail();
             }).catch((err:string) => {
@@ -115,7 +108,7 @@ suite('Apple Stalk', () => {
             });
 
         // Correct arguments
-        connect('127.0.0.1', 3001, db.clients[0].global_auth)
+        connect('127.0.0.1', db.clients[0].global_auth)
             .then(socket => {
                 // Testing that the socket is valid
                 socket.write("HELP\n");
@@ -154,4 +147,110 @@ suite('Apple Stalk', () => {
             assert.fail();
         }
     }).timeout(1000);
+});
+
+// TODO move to a different file
+suite('Virtual UDP', () => {
+    test('Should iniciate and close sockets correctly', function(done) {
+        let socket1 = dgram.createSocket('udp4');
+        let socket2 = dgram.createSocket('udp4');
+
+        socket1.on("error", (err:Error) => {
+            assert.fail(err.message);
+        }).on("listening", () => {
+            socket1.close();
+        }).bind(3000, '1');
+
+        socket2.on("error", (err:Error) => {
+            assert.fail(err.message);
+        }).on("listening", () => {
+            socket2.close();
+            done();
+        }).bind(3000, '1');
+    });
+
+    test('Should send and receive data', function(done) {
+        let sock1 = dgram.createSocket('udp4');
+        let sock2 = dgram.createSocket('udp4');
+
+        sock1.on("error", (err:Error) => {
+            assert.fail(err.message);
+        }).on('message', (msg, rinfo) => {
+            assert.isAbove(rinfo.port, 0);
+            assert.equal(rinfo.address, '2');
+            assert.equal(msg.toString('ascii'), 'TEST2');
+            sock1.close();
+            sock2.close();
+            done();
+        });
+        sock2.on("error", (err:Error) => {
+            assert.fail(err.message);
+        }).on("message", (msg:Buffer, rinfo:dgram.RemoteInfo) => {
+            assert.deepEqual(msg.toString('ascii'), 'TEST1');
+            let res = 'TEST2';
+            sock2.send(res, 0, res.length, rinfo.port, rinfo.address);
+        }).on("listening", () => {
+            sock1.bind(3015, '1', () => {
+                sock1.send('TEST1', 0, 'TEST1'.length, 3000, '2');
+            });
+        }).bind(3000, '2');
+    });
+
+    test('Broadcast should work', function(done) {
+        let sock1 = dgram.createSocket('udp4');
+        let sock2 = dgram.createSocket('udp4');
+        let sock3 = dgram.createSocket('udp4');
+        let received = 0;
+        
+        sock1.on("error", (err:Error) => {
+            assert.fail(err.message);
+        });
+        sock2.on("error", (err:Error) => {
+            assert.fail(err.message);
+        });
+        sock3.on("error", (err:Error) => {
+            assert.fail(err.message);
+        });
+
+        sock1.on("message", (msg:Buffer, rinfo:dgram.RemoteInfo) => {
+            assert.isAbove(msg.length, 0);
+            assert.deepEqual(msg.toString('ascii'), 'TEST');
+            if (rinfo.address !== '2') {
+                let res = 'TEST';
+                sock1.send(res, 0, res.length, 3000, 'broadcast');
+            }
+        });
+        sock2.on("message", (msg:Buffer, rinfo:dgram.RemoteInfo) => {
+            assert.isAbove(msg.length, 0);
+            assert.deepEqual(msg.toString('ascii'), 'TEST');
+            let res = 'TEST';
+            sock2.send(res, 0, res.length, 3000, 'broadcast');
+        });
+        sock3.on('message', (msg:Buffer, rinfo:dgram.RemoteInfo) => {
+            assert.isAbove(msg.length, 0);
+            assert.deepEqual(msg.toString('ascii'), 'TEST');
+            received++;
+            if (received === 3) {
+                setTimeout(() => {
+                    sock1.close();
+                    sock2.close();
+                    sock3.close();
+                    done();
+                }, 30);
+            }
+            if (received > 3) {
+                assert.fail('Received too many messages');
+            }
+        });
+        sock1.bind(3000, '1', () => {
+            sock1.addMembership('broadcast');
+        });
+        sock2.bind(3000, '2', () => {
+            sock2.addMembership('broadcast');
+        });
+        sock3.bind(3000, '3', () => {
+            sock3.addMembership('broadcast');
+            sock3.send('TEST', 0, 4, 3000, 'broadcast');
+        });
+    });
 });
