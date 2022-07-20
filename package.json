@@ -6,6 +6,7 @@
   "scripts": {
     "start": "ts-node-esm src/index.ts",
     "test": "set NODE_ENV=test&& mocha --require ts-node/register tests/index.ts",
+    "test_virtuals": "set NODE_ENV=test&& mocha --require ts-node/register tests/virtuals.ts",
     "example": "ts-node-esm examples/default.ts"
   },
   "author": "",

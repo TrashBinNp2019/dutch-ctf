@@ -33,7 +33,7 @@ export class Socket{
         }
     }
 
-    bind(port:number, addr:string, callback?:() => void) {
+    bind(port:number, addr:string, callback?:() => void):void {
         // TODO port = 0
         let host = hosts.find(val => val.addr === addr);
         if (host === undefined) {
@@ -61,6 +61,11 @@ export class Socket{
                         prev_host_port.sockets.splice(prev_host_port.sockets.indexOf(this), 1);
                     }
                 }
+                
+                let prev_ports = broadcasts
+                    .map(val => val.ports.find(val => val.port === this.port))
+                    .filter(val => val !== undefined);
+                prev_ports.forEach(val => val.sockets.splice(val.sockets.indexOf(this), 1));
             }
             host_port.sockets.push(this);
 
@@ -87,13 +92,13 @@ export class Socket{
             return;
         }
 
-        let group = hosts.find(val => val.addr === addr);
+        let group = broadcasts.find(val => val.addr === addr);
         if (group === undefined) {
             group = {
                 addr: addr,
                 ports: [],
             }
-            hosts.push(group);
+            broadcasts.push(group);
         }
         let socket_port = group.ports.find(val => val.port === this.port);
         if (socket_port === undefined) {
@@ -125,6 +130,8 @@ export class Socket{
         if (port === undefined || port.sockets.length === 0) 
             return;
 
+        // console.log(port.sockets);
+
         port.sockets.forEach(sock => {
             // TODO receive broadcast on loopback
             if (sock.addr !== this.addr && (!broadcast || sock.SO_BROADCAST === true)) {
@@ -137,6 +144,9 @@ export class Socket{
                 sock.emit('message', msg, rinfo);
             }
         });
+
+        // if verbouse log the args
+        // console.log(`${Number(new Date())}: ${this.addr} sent '${msg}' to ${dst}:${dport}`);
     }
 
     close(callback?:() => void) {
@@ -148,6 +158,11 @@ export class Socket{
                     prev_host_port.sockets.splice(prev_host_port.sockets.indexOf(this), 1);
                 }
             }
+
+            let prev_ports = broadcasts
+                .map(val => val.ports.find(val => val.port === this.port))
+                .filter(val => val !== undefined);
+            prev_ports.forEach(val => val.sockets.splice(val.sockets.indexOf(this), 1));
 
             this.addr = undefined;
             this.port = undefined;

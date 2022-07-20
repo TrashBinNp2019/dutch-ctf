@@ -10,6 +10,7 @@ export const Saturn = {
     GPORT: 4012,
     CPORT: 4013,
     MCAST_ADDR: '229.0.40.12',
+    INF_INTERVAL: 1000,
 }
 
 export const AppleStalk = {
