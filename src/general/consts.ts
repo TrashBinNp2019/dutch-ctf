@@ -1,8 +1,9 @@
 // MYRTLE 
 export const Myrtle = {
-    VERSION: '1.0.0',
+    VERSION: '1.0.1',
     HELP:   'INVALID INPUT\n' +
             'COMMANDS: LOGS, CLONE',
+    PORT: 3015,
 }
 
 export const Saturn = {

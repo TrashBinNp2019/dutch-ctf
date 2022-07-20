@@ -137,7 +137,7 @@ export class Socket{
             if (sock.addr !== this.addr && (!broadcast || sock.SO_BROADCAST === true)) {
                 let rinfo:RemoteInfo = {
                     address: this.addr,
-                    family: '0',
+                    family: 'IPv4',
                     port: this.port,
                     size:length,
                 };

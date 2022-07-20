@@ -1,5 +1,5 @@
-// import * as dgram  from 'dgram';
-import * as dgram from '../general/virtual_udp.js';
+import * as dgram  from 'dgram';
+// import * as dgram from '../general/virtual_udp.js';
 import { Saturn, AppleStalk } from '../general/consts.js';
 
 
@@ -48,13 +48,14 @@ export class Entry{
  * Execution results are accessible via a table.
  */
 export class SaturnSocket{
-    socket: dgram.Socket;
+    global_socket: dgram.Socket;
     control_socket: dgram.Socket;
     table: Entry[];
     hub_available: boolean;
 
-    constructor(socket:dgram.Socket) {
-        this.socket = socket;
+    constructor(gsocket:dgram.Socket, csocket:dgram.Socket) {
+        this.global_socket = gsocket;
+        this.control_socket = csocket;
         this.table = [];
         this.hub_available = false;
     }
@@ -105,6 +106,11 @@ export class SaturnSocket{
             }
             resolve(hub);
         });
+    }
+
+    close():void {
+        this.global_socket.close();
+        this.control_socket.close();
     }
 }
 
@@ -172,7 +178,7 @@ export function init(addr:string, type:string):Promise<SaturnSocket> {
     return new Promise(async (resolve, reject) => {
         let global_socket = dgram.createSocket('udp4');
         let control_socket = dgram.createSocket('udp4');
-        let saturn_socket = new SaturnSocket(global_socket);
+        let saturn_socket = new SaturnSocket(global_socket, control_socket);
 
         global_socket.on('error', (err:Error) => {
             console.log(`Global socket: ${err.message}`);
