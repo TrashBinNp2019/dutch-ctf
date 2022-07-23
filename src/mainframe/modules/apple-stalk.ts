@@ -1,5 +1,6 @@
 import * as net from 'net';
 import { Module } from './general-module.js';
+import { AppleStalk } from '../../general/consts.js';
 import * as db from '../system/clients.js';
 import * as fs from '../system/files.js';
 
@@ -8,16 +9,13 @@ import * as fs from '../system/files.js';
  * Intentionally hackable via brute-force or any other method of obtaining valid auth tokens
  */
 
-const version = "1.1.0"
-
 /**
  * Client-side asynchronous instrument for connecting.
  * @param addr IP address of the server
- * @param port Server port
  * @param auth Auth token
  * @returns Promise that resolves to a socket when the connection is established
  */
-export function connect(addr:string, port:number, auth:string): Promise<net.Socket> {
+export function connect(addr:string, auth:string): Promise<net.Socket> {
     return new Promise<net.Socket>((resolve, reject) => {
         try {
             let hub_socket = new net.Socket();
@@ -35,18 +33,18 @@ export function connect(addr:string, port:number, auth:string): Promise<net.Sock
             hub_socket.on('error', (err:Error) => {
                 reject(err.message);
             });
-            hub_socket.connect(port, addr);
+            hub_socket.connect(AppleStalk.PORT, addr);
         } catch(e) {
             reject("Apple Stalk is inaccessible: " + e);
         }
     });
 }
 
-function init(addr:string, port:number):Module {
+function init(addr:string):Module {
     const server = net.createServer();
 
     server.on('connection', (socket) => {
-        socket.write(`APPLE STALK v${version}\n`);
+        socket.write(`APPLE STALK v${AppleStalk.VERSION}\n`);
         socket.write('AUTH:\n');
         let loggedIn = false;
         let client:db.Client = undefined;
@@ -120,9 +118,9 @@ function init(addr:string, port:number):Module {
         socket.on("data", handler);
     });
 
-    server.listen(port, addr, () => {});
+    server.listen(AppleStalk.PORT, addr, () => {});
 
-    let module = new Module(port);
+    let module = new Module(AppleStalk.PORT);
     module.trash = () => { server.close() };
     module.entry_point = -1;
 

@@ -44,7 +44,7 @@ suite('Witching Hour', () => {
 });
 
 suite('Apple Stalk', () => {
-    let module = apple_stalk('127.0.0.1', 3001);
+    let module = apple_stalk('127.0.0.1');
     
     test('Module should be valid and accessible', function(){
         try{
@@ -88,25 +88,16 @@ suite('Apple Stalk', () => {
     });
     test('Connect instrument should work correctly', function(done){
         // Unreachable destination
-        connect('127.0.0.1', 1, db.clients[0].global_auth)
+        connect('1.1.1.1', db.clients[0].global_auth)
             .then(socket => {
                 assert.fail();
             }).catch((err:string) => {
                 // as in 'destination inaccessible'
                 assert.isTrue(err.toLowerCase().includes("inaccessible"));
             });
-
-        // Invalid service
-        connect('127.0.0.1', 3000, db.clients[0].global_auth)
-            .then(socket => {
-                assert.fail();
-            }).catch((err:string) => {
-                // as in 'invalid fromat'
-                assert.isTrue(err.toLowerCase().includes("format"));
-            });
-
+            
         // Invalid auth
-        connect('127.0.0.1', 3000, "INVALID")
+        connect('127.0.0.1', "INVALID")
             .then(socket => {
                 assert.fail();
             }).catch((err:string) => {
@@ -115,7 +106,7 @@ suite('Apple Stalk', () => {
             });
 
         // Correct arguments
-        connect('127.0.0.1', 3001, db.clients[0].global_auth)
+        connect('127.0.0.1', db.clients[0].global_auth)
             .then(socket => {
                 // Testing that the socket is valid
                 socket.write("HELP\n");
