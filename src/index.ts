@@ -1,22 +1,22 @@
 import { init as system_init } from "./mainframe/system/index.js";
-import { spawn as myrtle, spawn } from "./entities/myrtle.js";
-import * as saturn from './general/saturn.js';
-import { Saturn } from './general/consts.js';
+import { spawn as myrtle } from "./entities/myrtle.js";
+import { Entity } from './entities/general-entity.js';
 import { networkInterfaces } from 'os';
 
 const nets = networkInterfaces();
 const results = {};
 let addr = '';
+console.time('- Time ellapsed'); // Initiate a timer with a prompt message
 
 for (const name of Object.keys(nets)) {
-  for (const net of nets[name]) {
-    if (net.family === 'IPv4' && !net.internal) {
-      if (!results[name]) {
-        results[name] = [];
-      }
-      results[name].push(net.address);
+    for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+            if (!results[name]) {
+                results[name] = [];
+            }
+            results[name].push(net.address);
+        }
     }
-  }
 }
 
 console.log('- Detected networks: ', results);
@@ -45,11 +45,9 @@ switch (mode) {
         console.log('- Starting mainframe');
         system_init(addr)
         .then((entity) => {
-            console.log('+ Success');
-            console.log('- Ports:', entity.ports());
+            onSuccess(entity);
         }).catch((err) => {
-            console.log('! Error:');
-            console.log(err);
+            onError(err);
         });
         break;
     }
@@ -57,11 +55,9 @@ switch (mode) {
         console.log('- Starting myrtle');
         myrtle(addr)
         .then((entity) => {
-            console.log('+ Success');
-            console.log('- Ports:', entity.ports());
+            onSuccess(entity);
         }).catch(err => {
-            console.log('! Error:');
-            console.log(err);
+            onError(err);
         });
         break;
     } 
@@ -69,3 +65,14 @@ switch (mode) {
         console.log('! Unknown mode:', mode);
     }
 }
+
+const onSuccess = (entity:Entity) => {
+    console.log('+ Success');
+    console.timeEnd('- Time ellapsed');
+    console.log('- Ports:', entity.ports());
+};
+
+const onError = (err:Error) => {
+    console.log('! Error:');
+    console.log(err);
+};

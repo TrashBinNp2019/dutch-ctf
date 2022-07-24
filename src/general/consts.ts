@@ -18,3 +18,8 @@ export const AppleStalk = {
     VERSION: '1.1.0',
     PORT: 4011,
 }
+
+export const Silver = {
+    VERSION: '1.0.0',
+    PORT: 4204,
+}

@@ -5,7 +5,8 @@ import { init as wren } from "../modules/wren.js";
 // import { Client, clients } from "./clients.js";
 import { Entity } from "../../entities/general-entity.js";
 import * as saturn from "../../general/saturn.js";
-import { Saturn } from "../../general/consts.js";
+import { Saturn, Silver } from "../../general/consts.js";
+import * as silver from '../../general/silver.js';
 
 export function init(addr: string):Promise<Entity> {
     return new Promise<Entity>(async (resolve, reject) => {
@@ -32,6 +33,8 @@ export function init(addr: string):Promise<Entity> {
                     { port: Saturn.CPORT, usage: 'Saturn: control port' }, 
                 ]   
             });
+
+            silver.init(addr, saturn_socket);
 
             resolve(entity);
         } catch(e) {

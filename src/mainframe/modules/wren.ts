@@ -49,7 +49,7 @@ export function init(addr:string, port:number):Module {
             // front-end
             case '/': {
                 if (req.method === 'GET') {
-                    fs.readFile('src/mainframe/modules/static/wren/index.html')
+                    fs.readFile('src/static/wren/index.html')
                         .then(data =>{
                             res.setHeader("Content-Type", "text/html");
                             res.writeHead(200);
@@ -65,7 +65,7 @@ export function init(addr:string, port:number):Module {
             // style
             case '/style.css': {
                 if (req.method === 'GET') {
-                    fs.readFile('src/mainframe/modules/static/wren/style.css')
+                    fs.readFile('src/static/wren/style.css')
                         .then(data =>{
                             res.setHeader("Content-Type", "text/css");
                             res.writeHead(200);
