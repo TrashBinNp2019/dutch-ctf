@@ -18,10 +18,10 @@ const name_generator = generator(0);
 
 export class Entity {
     kill: () => void;
-    ports: () => { port:number, usage:string }[];
+    ports: () => { port:number, usage:string, version:string }[];
     name: string;
 
-    constructor(kill: () => void, ports: () => { port:number, usage:string }[]) {
+    constructor(kill: () => void, ports: () => { port:number, usage:string, version:string }[]) {
         this.kill = kill;
         this.ports = ports;
 

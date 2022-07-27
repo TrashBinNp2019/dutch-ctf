@@ -1,11 +1,11 @@
 import * as net from 'net';
 import { Module } from './general-module.js';
+import { Eagle } from '../../general/consts.js';
 
 /**
  * Broadcasting module, which sends a predefined message to all subscribers
  */
 
-const version = "1.0.1"
 const PORTRE = /^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/gi;
 
 /**
@@ -48,12 +48,12 @@ class Subscriber {
     }
 }
 
-function init(addr:string, port:number, msg:number):Module {
+function init(addr:string, msg:number):Module {
     let subscribers = [];
     const server = net.createServer();
 
     server.on('connection', (socket) => {
-        socket.write(`EAGLE v${version}\n`);
+        socket.write(`EAGLE v${Eagle.VERSION}\n`);
 
         socket.on("error", (err:Error) => {
             console.log("err");
@@ -106,9 +106,9 @@ function init(addr:string, port:number, msg:number):Module {
         });
     });
 
-    server.listen(port, addr, () => {});
+    server.listen(Eagle.PORT, addr, () => {});
 
-    let module = new Module(port);
+    let module = new Module(Eagle.PORT);
     module.trash = () => { server.close() };
     module.entry_point = -1;
 

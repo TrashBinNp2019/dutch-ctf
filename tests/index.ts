@@ -23,7 +23,7 @@ function randomAuth(difficulty:number, base:string) {
 // However, damn net.Server does NOT close when I ask it to.
 // bruh moment
 suite('Witching Hour', () => {
-    let module = witching_hour('127.0.0.1', 3000, "this is a test");
+    let module = witching_hour('127.0.0.1', "this is a test");
     
     test('Module should be valid and accessible', function(){
         try{

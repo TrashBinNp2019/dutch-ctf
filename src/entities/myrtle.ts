@@ -100,7 +100,7 @@ export function spawn(addr:string): Promise<Entity> {
                 saturn_socket.close();
             }, () => {
                 return [
-                    { port: Myrtle.PORT, usage: `Myrtle` },
+                    { port: Myrtle.PORT, usage: `Myrtle`, version: Myrtle.VERSION },
                 ];
             });
             resolve(entity);

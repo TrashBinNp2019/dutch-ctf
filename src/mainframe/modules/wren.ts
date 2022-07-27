@@ -2,8 +2,8 @@ import { Module } from './general-module.js';
 import * as db from '../system/clients.js';
 import * as http from 'http';
 import { promises as fs } from 'fs';
+import { Wren } from '../../general/consts.js';
 
-const version = "1.0.0";
 
 /**
  * Describes a subserver, hosting client's page.
@@ -41,7 +41,7 @@ class Hosting {
     }
 }
 
-export function init(addr:string, port:number):Module {
+export function init(addr:string):Module {
     let hostings:Hosting[] = [];
     const server = http.createServer((req, res) => {
         let url = req.url.substring(0, (req.url + '?').indexOf('?'));;
@@ -81,7 +81,7 @@ export function init(addr:string, port:number):Module {
             // api for version req and onnection tests
             case '/api/version': {
                 res.writeHead(200);
-                res.end(version);
+                res.end(Wren.VERSION);
                 return;
             }
         }
@@ -166,7 +166,7 @@ export function init(addr:string, port:number):Module {
         res.end();
         return;
     });
-    server.listen(port, addr);
+    server.listen(Wren.PORT, addr);
 
-    return new Module(port);
+    return new Module(Wren.PORT);
 }

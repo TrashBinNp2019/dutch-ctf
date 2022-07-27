@@ -1,11 +1,11 @@
 import * as net from 'net';
+import { WitchingHour } from '../../general/consts.js';
 import { Module } from './general-module.js';
 
 /**
  * Simple module, acting as a map-style database, where every message is stored in a chain.
  */
 
-const version = "1.0.0";
 var keyGenerator = () => { return Math.floor(Math.random() * 1048576) };
 
 /**
@@ -55,14 +55,14 @@ function shred(msg:string):MsgBit[] {
     return arr;
 }
 
-function init(addr:string, port:number, msg:string):Module {
+function init(addr:string, msg:string):Module {
     const server = net.createServer();
     let msgArr = shred(msg);
 
     let last_req:number = undefined;
 
     server.on('connection', (socket) => {
-        socket.write(`WITCHING_HOUR v${version}\n`);
+        socket.write(`WITCHING_HOUR v${WitchingHour.VERSION}\n`);
 
         socket.on("error", (err:Error) => {
             console.log("err");
@@ -107,10 +107,10 @@ function init(addr:string, port:number, msg:string):Module {
         });
     });
 
-    server.listen(port, addr, () => {
+    server.listen(WitchingHour.PORT, addr, () => {
     });
 
-    let module = new Module(port);
+    let module = new Module(WitchingHour.PORT);
     module.trash = () => { server.close() };
     module.entry_point = msgArr[0].key;
 

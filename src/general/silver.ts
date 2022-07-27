@@ -2,6 +2,7 @@ import * as http from 'http';
 import * as fs from 'fs';
 import { Silver } from './consts.js';
 import { SaturnSocket } from './saturn.js';
+import { Entity } from '../entities/general-entity.js';
 
 const Security = {
     // no filtering
@@ -16,21 +17,21 @@ const Security = {
 const sec = Security.any;
 
 
-export function init(addr:string, saturn:SaturnSocket) {
+export function init(addr:string, saturn:SaturnSocket, entity:Entity) {
     if (sec !== Security.loopback) {
         console.log(`? Silver running in '${sec}' security mode`);
     }
     let index_html = '';
-    let index_css = '';
+    let styles_css = '';
     let index_jsx = '';
 
     fs.readFile('src/static/silver/index.html', 'utf8', (err, data) => {
         if (err) throw err;
         index_html = data;
     });
-    fs.readFile('src/static/silver/index.css', 'utf8', (err, data) => {
+    fs.readFile('src/static/silver/styles.css', 'utf8', (err, data) => {
         if (err) throw err;
-        index_css = data;
+        styles_css = data;
     });
     fs.readFile('src/static/silver/index.jsx', 'utf8', (err, data) => {
         if (err) throw err;
@@ -59,9 +60,9 @@ export function init(addr:string, saturn:SaturnSocket) {
                 response.end(index_html);
                 return;
             }
-            case 'index.css': {
+            case 'styles.css': {
                 response.writeHead(200, { 'Content-Type': 'text/css' });
-                response.end(index_css);
+                response.end(styles_css);
                 return;
             }
             case 'index.jsx': {
@@ -71,9 +72,18 @@ export function init(addr:string, saturn:SaturnSocket) {
             }
         }
         if (path.startsWith('api/')) {
-            response.writeHead(200, { 'Content-Type': 'text/jsx' });
-            response.end(index_jsx);
-            return;
+            switch (path) {
+                case 'api/version': {
+                    response.writeHead(200);
+                    response.end(Silver.VERSION);
+                    return;
+                }
+                case 'api/ports': {
+                    response.writeHead(200);
+                    response.end(JSON.stringify(entity.ports()));
+                    return;
+                }
+            }
         }
 
         response.writeHead(404);

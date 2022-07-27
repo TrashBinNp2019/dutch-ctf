@@ -23,3 +23,18 @@ export const Silver = {
     VERSION: '1.0.0',
     PORT: 4204,
 }
+
+export const WitchingHour = {
+    VERSION: '1.0.0',
+    PORT: 3000,
+}
+
+export const Eagle = {
+    VERSION: '1.0.1',
+    PORT: 3001,
+}
+
+export const Wren = {
+    VERSION: '1.0.0',
+    PORT: 3003,
+}

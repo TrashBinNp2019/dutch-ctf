@@ -23,6 +23,7 @@ console.log('- Detected networks: ', results);
 switch (Object.keys(results).length) {
     case 0: {
         console.log('! No suitable network interfaces detected');
+        process.exit();
         break;
     }
     default: {
